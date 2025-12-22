@@ -11,7 +11,7 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-pink-400 to-indigo-200 flex items-center justify-center min-h-screen text-gray-800">
+    <div className="bg-gradient-to-br from-violet-500 to-indigo-200 flex items-center justify-center min-h-screen text-gray-800">
       <div className="bg-gradient-to-br from-violet-200 to-pink-200 shadow-xl rounded-lg p-6 w-80">
         <h1 className="text-4xl font-display mb-6 text-center text-indigo-600 ">
           Todo App
