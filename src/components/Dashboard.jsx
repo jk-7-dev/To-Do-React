@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TaskItem from './TaskItem';
 
 const DUMMY_DATA = [
   { id: 1, text: "Learn React Props", priority: "High" , date: "2025-12-25", completed: false},
@@ -112,58 +113,19 @@ const Dashboard = ({ onLogout }) => {
         </section>
 
         {/* Task List */}
-        <section className="bg-gradient-to-br from-violet-200 to-pink-200 shadow-md rounded-lg p-6">
-          <header className="font-bold mb-6 text-center text-lg text-indigo-600">
-            Active Tasks
-          </header>
-
-          <ul className="space-y-4">
-            {tasks.length === 0 ? (
-              <p className="text-gray-500 text-sm italic text-center">
-                No tasks yet. Add one above!
-              </p>
-            ) : (
-              tasks.map(task => (
-                <li
-                  key={task.id}
-                  className="border border-gray-200 rounded-md p-4 flex justify-between items-start hover:bg-indigo-200 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => toggleComplete(task.id)}
-                      className="cursor-pointer accent-indigo-500"
-                    />
-                    <span
-                      className={`text-sm ${
-                        task.completed
-                          ? "line-through text-gray-400"
-                          : "text-gray-800"
-                      }`}
-                    >
-                      {task.text}
-                    </span>
-                  </div>
-
-                  <div className="text-xs flex items-center gap-4">
-                    <span className="uppercase font-semibold text-indigo-500">
-                      {task.priority}
-                    </span>
-                    <span className="text-gray-500">{task.date}</span>
-                    <div className="flex gap-3">
-                      <button title="Edit" className="hover:text-indigo-600">✏️</button>
-                      <button
-                        title="Delete"
-                        onClick={() => deleteTask(task.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))
+        <section className="bg-white/60 backdrop-blur-lg shadow-md rounded-lg p-6">
+          <header className="font-bold mb-4 text-indigo-600">Active Tasks ({tasks.length})</header>
+          <ul className="space-y-3">
+            {tasks.map(task => (
+              <TaskItem 
+                key={task.id} 
+                task={task} 
+                onToggle={toggleComplete} 
+                onDelete={deleteTask} 
+              />
+            ))}
+            {tasks.length === 0 && (
+              <p className="text-center text-gray-500 text-sm italic">Your list is empty!</p>
             )}
           </ul>
         </section>
