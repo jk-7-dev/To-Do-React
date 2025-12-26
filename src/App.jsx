@@ -1,21 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
-import Dashboard from './components/dashboard';
+import Dashboard from './components/Dashboard';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = () => setIsLoggedIn(true);
-  const handleLogout = () => setIsLoggedIn(false);
+  const handleLogin = () => {
+    navigate('/dashboard'); 
+  };
+
+  const handleLogout = () => {
+    navigate('/'); 
+  };
 
   return (
-    <>
-      {isLoggedIn ? (
-        <Dashboard onLogout={handleLogout} />
-      ) : (
-        <Login onLogin={handleLogin} />
-      )}
-    </>
+    <Routes>
+      <Route path="/" element={<Login onLogin={handleLogin} />} />
+      <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
+    </Routes>
   );
 }
 

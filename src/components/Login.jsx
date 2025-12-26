@@ -3,9 +3,14 @@ import React, { useState } from 'react';
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const handleChangeMail =(e) => {
+    setEmail(e.target.value);
+  }
+  const handleChangePass =(e) => {
+    setPassword(e.target.value);
+  }
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+  const handleLogin = () => {
     console.log("Logging in with:", email, password);
     onLogin();
   };
@@ -24,7 +29,7 @@ const Login = ({ onLogin }) => {
             className="w-full border border-gray-300 px-3 py-2 text-sm rounded-md 
                        focus:outline-none focus:ring-2 focus:ring-indigo-400"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleChangeMail}
           />
 
           <input
@@ -33,7 +38,7 @@ const Login = ({ onLogin }) => {
             className="w-full border border-gray-300 px-3 py-2 text-sm rounded-md 
                        focus:outline-none focus:ring-2 focus:ring-indigo-400"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handleChangePass}
           />
 
           <button
