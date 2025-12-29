@@ -1,50 +1,55 @@
 import React, { useState } from 'react';
+import { useRouter } from '@tanstack/react-router';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const handleChangeMail =(e) => {
-    setEmail(e.target.value);
-  }
-  const handleChangePass =(e) => {
-    setPassword(e.target.value);
-  }
 
-  const handleLogin = () => {
-    console.log("Logging in with:", email, password);
-    onLogin();
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    // Static check (you can change these to whatever you like)
+    if (email === 'admin@todo.com' && password === 'password123') {
+      // 1. Save a flag in localStorage so the app "remembers" you
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      // 2. Navigate to Dashboard using TanStack Router
+      router.navigate({ to: '/dashboard' });
+    } else {
+      alert("Invalid credentials! Try admin@todo.com / password123");
+    }
   };
 
   return (
-    <div className="bg-gradient-to-br from-violet-500 to-indigo-200 flex items-center justify-center min-h-screen text-gray-800">
-      <div className="bg-gradient-to-br from-violet-200 to-pink-200 shadow-xl rounded-lg p-6 w-80">
-        <h1 className="text-4xl font-display mb-6 text-center text-indigo-600 ">
+    <div className="bg-gradient-to-br from-violet-500 to-indigo-400 flex items-center justify-center min-h-screen text-gray-800 font-sans">
+      <div className="bg-white/20 backdrop-blur-md shadow-2xl rounded-2xl p-8 w-full max-w-sm border border-white/30">
+        <h1 className="text-4xl font-bold mb-8 text-center text-white tracking-tight">
           Todo App
         </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-5">
           <input
             type="email"
-            placeholder="Email"
-            className="w-full border border-gray-300 px-3 py-2 text-sm rounded-md 
-                       focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            placeholder="Email (admin@todo.com)"
+            className="w-full bg-white/90 border-none px-4 py-3 text-base rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none transition-all"
             value={email}
-            onChange={handleChangeMail}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <input
             type="password"
-            placeholder="Password"
-            className="w-full border border-gray-300 px-3 py-2 text-sm rounded-md 
-                       focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            placeholder="Password (password123)"
+            className="w-full bg-white/90 border-none px-4 py-3 text-base rounded-xl focus:ring-2 focus:ring-indigo-300 outline-none transition-all"
             value={password}
-            onChange={handleChangePass}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <button
             type="submit"
-            className="w-full bg-indigo-500 text-white py-2 rounded-md text-sm 
-                       hover:bg-indigo-600 transition-colors"
+            className="w-full bg-indigo-600 text-white py-3 rounded-xl text-lg font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
           >
             Login
           </button>
