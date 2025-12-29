@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // 1. Import Axios
 import TaskItem from './TaskItem';
 
 const Dashboard = ({ onLogout }) => {
   const [tasks, setTasks] = useState([]);
   const [formData, setFormData] = useState({
     text: '',
-    priority: 'Medium',
+    priority: 'medium', // Default to lowercase to match DB
     date: ''
   });
 
-  // 1. Fetch all tasks from the Go API on component mount
+  // Create an Axios instance for cleaner URLs
+  const api = axios.create({
+    baseURL: 'http://localhost:8080/api'
+  });
+
+  // 1. Fetch all tasks using Axios
   useEffect(() => {
-    fetch('http://localhost:8080/api/tasks')
-      .then((res) => res.json())
-      .then((data) => {
-        // Ensure data is an array before setting state
-        setTasks(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => console.error("Failed to fetch tasks:", err));
+    const fetchTasks = async () => {
+      try {
+        const response = await api.get('/tasks');
+        setTasks(Array.isArray(response.data) ? response.data : []);
+      } catch (err) {
+        console.error("Failed to fetch tasks:", err);
+      }
+    };
+    fetchTasks();
   }, []);
 
   const handleInputChange = (e) => {
@@ -25,10 +33,9 @@ const Dashboard = ({ onLogout }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Derived state: check against 'completed' status string from DB
   const activeTasksCount = tasks.filter((task) => task.status !== 'completed').length;
 
-  // 2. Add Task via POST request
+  // 2. Add Task via POST
   const handleAddTask = async (e) => {
     e.preventDefault();
     const { text, priority, date } = formData;
@@ -36,55 +43,39 @@ const Dashboard = ({ onLogout }) => {
     if (!text.trim()) return;
 
     try {
-      const response = await fetch('http://localhost:8080/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          priority: priority,
-          date: date || "No Date",
-          user_id: 1 // Defaulting to user 1 as per current schema
-        }),
+      // Axios automatically handles JSON.stringify
+      const response = await api.post('/tasks', {
+        text: text,
+        priority: priority.toLowerCase(), // FIX: Ensure lowercase for SQLite CHECK constraint
+        date: date || "No Date",
+        user_id: 1 
       });
 
-      if (response.ok) {
-        const newTask = await response.json();
-        setTasks((prev) => [newTask, ...prev]);
-        setFormData({ text: '', priority: 'Medium', date: '' });
-      }
+      setTasks((prev) => [response.data, ...prev]);
+      setFormData({ text: '', priority: 'medium', date: '' });
     } catch (err) {
-      console.error("Error adding task:", err);
+      console.error("Error adding task:", err.response?.data || err.message);
+      alert("Error: " + (err.response?.data || "Could not add task"));
     }
   };
 
-  // 3. Delete Task via DELETE request
+  // 3. Delete Task via DELETE
   const deleteTask = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/tasks/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setTasks((prev) => prev.filter((task) => task.id !== id));
-      }
+      await api.delete(`/tasks/${id}`);
+      setTasks((prev) => prev.filter((task) => task.id !== id));
     } catch (err) {
       console.error("Error deleting task:", err);
     }
   };
 
-  // 4. Toggle Task status via PUT request
+  // 4. Toggle Task status via PUT
   const toggleComplete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/tasks/${id}`, {
-        method: 'PUT',
-      });
-
-      if (response.ok) {
-        const updatedTask = await response.json();
-        setTasks((prev) =>
-          prev.map((task) => (task.id === id ? updatedTask : task))
-        );
-      }
+      const response = await api.put(`/tasks/${id}`);
+      setTasks((prev) =>
+        prev.map((task) => (task.id === id ? response.data : task))
+      );
     } catch (err) {
       console.error("Error toggling task:", err);
     }
@@ -126,9 +117,9 @@ const Dashboard = ({ onLogout }) => {
                 value={formData.priority}
                 onChange={handleInputChange}
               >
-                <option value="Low">Low Priority</option>
-                <option value="Medium">Medium Priority</option>
-                <option value="High">High Priority</option>
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
               </select>
 
               <input
