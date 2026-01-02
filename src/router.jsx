@@ -1,11 +1,11 @@
-import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, Outlet, redirect } from '@tanstack/react-router'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 
 const rootRoute = createRootRoute({
   component: () => (
     <>
-      <Outlet /> {/* This is where child routes (Login/Dashboard) render */}
+      <Outlet />
     </>
   ),
 })
@@ -20,6 +20,17 @@ const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard',
   component: Dashboard,
+  beforeLoad: ({ location }) => {
+    const isAuthenticated = !!localStorage.getItem('token');
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/',
+        search: {
+          redirect: location.href,
+        },
+      });
+    }
+  },
 })
 
 const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute])

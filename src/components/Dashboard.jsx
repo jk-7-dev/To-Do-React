@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Removed useEffect
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
@@ -6,8 +6,17 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import axios from 'axios';
 import TaskItem from './TaskItem';
 
+// 1. Setup Axios with an Interceptor
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 const DraggablePortal = ({ children, draggableProps, dragHandleProps, innerRef, isDragging }) => {
@@ -42,24 +51,18 @@ const Dashboard = () => {
     date: '',
   });
 
-  // Local state for DnD
   const [orderedTasks, setOrderedTasks] = useState([]);
 
-  // FIX: Use placeholderData or the select/onSuccess pattern to sync state
   const { isLoading, isError } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
       const response = await api.get('/tasks');
       const data = response.data || [];
-      // Synchronize local state here to avoid useEffect cascading renders
       setOrderedTasks(data); 
       return data;
     },
-    // This ensures data is cached and managed properly by TanStack
     placeholderData: (previousData) => previousData, 
   });
-
-  // REMOVED: useEffect that was calling setOrderedTasks(tasks)
 
   const addTaskMutation = useMutation({
     mutationFn: (newTask) => api.post('/tasks', newTask),
@@ -67,7 +70,13 @@ const Dashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setFormData({ text: '', priority: 'medium', date: '' });
     },
-    onError: (err) => alert("Error: " + (err.response?.data || err.message))
+    onError: (err) => {
+      if (err.response?.status === 401) {
+        handleLogout();
+      } else {
+        alert("Error: " + (err.response?.data || err.message));
+      }
+    }
   });
 
   const deleteMutation = useMutation({
@@ -98,15 +107,21 @@ const Dashboard = () => {
   const handleAddTask = (e) => {
     e.preventDefault();
     if (!formData.text.trim()) return;
+
+    // We pull the user_id from localStorage for the new task
+    const userId = localStorage.getItem('user_id');
+
     addTaskMutation.mutate({
       text: formData.text,
       priority: formData.priority,
       date: formData.date || "No Date",
-      user_id: 1,
+      user_id: userId ? parseInt(userId) : 1,
     });
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_id');
     queryClient.clear();
     router.navigate({ to: '/' });
   };
@@ -120,8 +135,11 @@ const Dashboard = () => {
   );
 
   if (isError) return (
-    <div className="min-h-screen flex items-center justify-center bg-red-50 font-sans">
-      <p className="text-red-600 font-bold">Failed to connect to backend.</p>
+    <div className="min-h-screen flex items-center justify-center bg-red-50 font-sans text-center px-4">
+      <div>
+        <p className="text-red-600 font-bold mb-4">Session expired or connection lost.</p>
+        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded-lg">Return to Login</button>
+      </div>
     </div>
   );
 
@@ -130,7 +148,7 @@ const Dashboard = () => {
       <nav className="bg-gradient-to-br from-violet-200 to-pink-200 shadow-md px-8 py-4 flex justify-between items-center sticky top-0 z-50">
         <h1 className="text-2xl font-bold text-indigo-600">Todo App</h1>
         <div className="flex items-center gap-6">
-          <span className="text-gray-700 font-medium hidden sm:inline">Welcome, <span className="text-indigo-600">User</span></span>
+          <span className="text-gray-700 font-medium hidden sm:inline">Welcome!</span>
           <button onClick={handleLogout} className="bg-white/50 hover:bg-white/80 px-4 py-1.5 rounded-full text-indigo-600 font-semibold border border-indigo-200 shadow-sm transition-all">
             Log Out
           </button>
